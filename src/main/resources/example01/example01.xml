@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+    <import resource="classpath:datasource-context.xml" />
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="databaseType" value="MySQL" />
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
+
+    <batch:job id="example01Job">
+        <batch:step id="s1">
+            <batch:tasklet>
+                <batch:chunk reader="itemReader"
+                             writer="itemWriter"
+                             processor="itemProcessor"
+                             commit-interval="10" />
+            </batch:tasklet>
+        </batch:step>
+    </batch:job>
+
+    <bean id="itemReader"
+          class="com.epam.techtalk.spring.batch.example01.FileStringReader"></bean>
+
+    <bean id="itemWriter"
+          class="com.epam.techtalk.spring.batch.example01.FileStringWriter"></bean>
+
+    <bean id="itemProcessor"
+          class="com.epam.techtalk.spring.batch.example01.FileStringProcessor"></bean>
+</beans>
