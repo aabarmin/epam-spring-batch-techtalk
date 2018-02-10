@@ -36,12 +36,12 @@
         </batch:step>
     </batch:job>
 
-    <!--<bean id="itemReader"-->
-          <!--init-method="init"-->
-          <!--class="com.epam.techtalk.spring.batch.example01.FileStringReader"></bean>    -->
-
     <bean id="itemReader"
-          class="com.epam.techtalk.spring.batch.example03.FilterItemStreamReader"></bean>
+          init-method="init"
+          class="com.epam.techtalk.spring.batch.example01.FileStringReader"></bean>
+
+    <!--<bean id="itemReader"-->
+          <!--class="com.epam.techtalk.spring.batch.example03.FilterItemStreamReader"></bean>-->
 
     <bean id="itemWriter"
           class="com.epam.techtalk.spring.batch.example01.FileStringWriter"></bean>
