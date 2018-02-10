@@ -14,7 +14,7 @@ public class FileStringReader implements ItemReader<String> {
     private Iterator<String> iterator;
 
     public void init() throws Exception {
-        final ClassPathResource resource = new ClassPathResource("example01/source.txt");
+        final ClassPathResource resource = new ClassPathResource("source.txt");
         final Stream<String> lines = Files.lines(resource.getFile().toPath());
         iterator = lines.iterator();
     }
