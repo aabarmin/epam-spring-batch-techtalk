@@ -8,5 +8,6 @@ dependencies {
     compile 'org.springframework.batch:spring-batch-core:4.0.0.RELEASE'
 
     compile 'org.springframework:spring-jdbc:5.0.3.RELEASE'
+    compile 'org.springframework:spring-core:5.0.3.RELEASE'
     compile 'mysql:mysql-connector-java:6.0.6'
 }
