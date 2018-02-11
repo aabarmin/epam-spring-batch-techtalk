@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+    <import resource="classpath:datasource-context.xml" />
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="databaseType" value="MySQL" />
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
+
+    <batch:job id="example09Job">
+        <batch:step id="step1">
+            <batch:tasklet>
+                <batch:chunk reader="itemReader" processor="itemProcessor"
+                             writer="jdbcItemWriter"
+                             commit-interval="10"
+                             skip-limit="2">
+                    <batch:skippable-exception-classes>
+                        <batch:include class="com.epam.techtalk.spring.batch.example06.VaderException" />
+                    </batch:skippable-exception-classes>
+                </batch:chunk>
+            </batch:tasklet>
+
+            <batch:next on="VADER" to="step3" />
+            <batch:next on="*" to="step2" />
+
+            <batch:listeners>
+                <batch:listener ref="vaderStepExecutionListener" />
+            </batch:listeners>
+        </batch:step>
+
+        <batch:step id="step2">
+            <batch:tasklet transaction-manager="hibernateTransactionManager">
+                <batch:chunk reader="jdbcCitationReader" processor="citationTextAndAuthorExtractor"
+                             writer="hibernateCitationWriter" commit-interval="3"/>
+            </batch:tasklet>
+        </batch:step>
+
+        <batch:step id="step3">
+            <batch:tasklet ref="vaderTasklet" />
+        </batch:step>
+    </batch:job>
+
+    <bean id="vaderStepExecutionListener"
+          class="com.epam.techtalk.spring.batch.example09.VaderStepExecutionListener" />
+
+    <bean id="itemReader"
+          init-method="init"
+          class="com.epam.techtalk.spring.batch.example06.ExceptionOnVaderReader"></bean>
+
+    <bean id="jdbcItemWriter"
+          class="com.epam.techtalk.spring.batch.example05.JdbcItemWriter">
+        <property name="jdbcTemplate" ref="jdbcTemplate" />
+    </bean>
+
+    <bean id="itemProcessor"
+          class="com.epam.techtalk.spring.batch.example01.FileStringProcessor"></bean>
+
+
+    <bean id="jdbcCitationReader"
+          class="org.springframework.batch.item.database.JdbcCursorItemReader">
+        <property name="dataSource" ref="dataSource" />
+        <property name="sql" value="select * from quotes_table" />
+        <property name="rowMapper">
+            <bean class="com.epam.techtalk.spring.batch.example05.JdbcCitationMapper" />
+        </property>
+    </bean>
+
+    <bean id="citationTextAndAuthorExtractor"
+          class="com.epam.techtalk.spring.batch.example05.CitationTextAndAuthorExtractor" />
+
+    <bean id="hibernateCitationWriter"
+          class="org.springframework.batch.item.database.HibernateItemWriter">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <bean id="vaderTasklet"
+          class="com.epam.techtalk.spring.batch.example06.VaderIsHereTasklet" />
+</beans>
