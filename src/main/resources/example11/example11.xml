@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+    <batch:job id="example11Job">
+        <batch:step id="mainStep">
+            <batch:partition step="processingStep"
+                             partitioner="partitioner">
+                <batch:handler grid-size="2" task-executor="taskExecutor" />
+            </batch:partition>
+        </batch:step>
+    </batch:job>
+
+    <bean id="partitioner"
+          class="org.springframework.batch.core.partition.support.MultiResourcePartitioner">
+        <property name="resources" value="classpath:example11/example11_*.xml" />
+    </bean>
+
+    <bean id="taskExecutor"
+          class="org.springframework.core.task.SimpleAsyncTaskExecutor" />
+
+    <batch:step id="processingStep">
+        <batch:tasklet transaction-manager="hibernateTransactionManager">
+            <batch:chunk reader="xmlReader"
+                         processor="identityProcessor"
+                         writer="hibernateWriter"
+                         commit-interval="2" />
+        </batch:tasklet>
+    </batch:step>
+
+    <bean id="xmlReader"
+          scope="step"
+          class="org.springframework.batch.item.xml.StaxEventItemReader">
+        <property name="fragmentRootElementName" value="citation" />
+        <property name="resource" value="#{stepExecutionContext[fileName]}" />
+        <property name="unmarshaller" ref="xmlMarshaller" />
+    </bean>
+
+    <bean id="xmlMarshaller"
+          class="org.springframework.oxm.xstream.XStreamMarshaller">
+        <property name="aliases">
+            <map>
+                <entry key="citation"
+                       value="com.epam.techtalk.spring.batch.example05.Citation" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="identityProcessor"
+          class="com.epam.techtalk.spring.batch.example10.IdentityProcessor" />
+
+    <bean id="hibernateWriter"
+          class="org.springframework.batch.item.database.HibernateItemWriter">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+
+
+
+
+    <import resource="classpath:datasource-context.xml" />
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="databaseType" value="MySQL" />
+        <property name="transactionManager" ref="hibernateTransactionManager" />
+    </bean>
+</beans>
