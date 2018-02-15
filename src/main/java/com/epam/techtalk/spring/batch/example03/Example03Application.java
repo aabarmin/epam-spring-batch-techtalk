@@ -10,7 +10,8 @@ public class Example03Application {
     private long count = 0;
 
     public void run() throws Exception {
-        final ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("example03/example03.xml");
+        final ClassPathXmlApplicationContext context =
+                new ClassPathXmlApplicationContext("example03/example03.xml");
 
         final JobLauncher syncJobLauncher = context.getBean("syncJobLauncher", JobLauncher.class);
         final JobLauncher asyncJobLauncher = context.getBean("asyncJobLauncher", JobLauncher.class);

@@ -7,7 +7,8 @@
         <batch:step id="mainStep">
             <batch:partition step="processingStep"
                              partitioner="partitioner">
-                <batch:handler grid-size="2" task-executor="taskExecutor" />
+                <batch:handler grid-size="2"
+                               task-executor="taskExecutor" />
             </batch:partition>
         </batch:step>
     </batch:job>
@@ -16,9 +17,6 @@
           class="org.springframework.batch.core.partition.support.MultiResourcePartitioner">
         <property name="resources" value="classpath:example11/example11_*.xml" />
     </bean>
-
-    <bean id="taskExecutor"
-          class="org.springframework.core.task.SimpleAsyncTaskExecutor" />
 
     <batch:step id="processingStep">
         <batch:tasklet transaction-manager="hibernateTransactionManager">
@@ -46,6 +44,13 @@
             </map>
         </property>
     </bean>
+
+
+
+
+
+    <bean id="taskExecutor"
+          class="org.springframework.core.task.SimpleAsyncTaskExecutor" />
 
     <bean id="identityProcessor"
           class="com.epam.techtalk.spring.batch.example10.IdentityProcessor" />

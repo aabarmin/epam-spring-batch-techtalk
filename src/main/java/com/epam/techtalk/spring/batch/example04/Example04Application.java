@@ -7,7 +7,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class Example04Application {
     public void run() throws Exception {
-        final ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("example04/example04.xml");
+        final ClassPathXmlApplicationContext context =
+                new ClassPathXmlApplicationContext("example04/example04.xml");
 
         final JobLauncher jobLauncher = context.getBean(JobLauncher.class);
         final Job jobWithAdapterTasklet = context.getBean("example04Job", Job.class);

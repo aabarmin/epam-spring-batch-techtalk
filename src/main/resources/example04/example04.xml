@@ -3,22 +3,9 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
 
-    <import resource="classpath:datasource-context.xml" />
-
-    <bean class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
-        <property name="jobRepository" ref="jobRepository" />
-    </bean>
-
-    <bean id="jobRepository"
-          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
-        <property name="dataSource" ref="dataSource" />
-        <property name="databaseType" value="MySQL" />
-        <property name="transactionManager" ref="transactionManager" />
-    </bean>
-
     <batch:job id="example04Job">
         <batch:step id="s1">
-             <batch:tasklet ref="externalBeanAdapter" />
+            <batch:tasklet ref="externalBeanAdapter" />
         </batch:step>
     </batch:job>
 
@@ -33,6 +20,7 @@
 
 
 
+
     <batch:job id="example05Job">
         <batch:step id="step1">
             <batch:tasklet ref="customTasklet" />
@@ -41,4 +29,20 @@
 
     <bean id="customTasklet"
           class="com.epam.techtalk.spring.batch.example04.CustomTasklet" />
+
+
+
+
+    <import resource="classpath:datasource-context.xml" />
+
+    <bean class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="databaseType" value="MySQL" />
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
 </beans>

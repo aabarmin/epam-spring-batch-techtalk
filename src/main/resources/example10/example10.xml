@@ -38,6 +38,42 @@
         </batch:split>
     </batch:job>
 
+
+
+
+    <bean id="csvWriter"
+          class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="lineAggregator" ref="csvLineAggregator" />
+        <property name="resource" value="file:output/example10.csv" />
+    </bean>
+
+    <bean id="csvLineAggregator"
+          class="com.epam.techtalk.spring.batch.example10.CsvLineAggregator" />
+
+
+
+    <bean id="xmlWriter"
+          class="org.springframework.batch.item.xml.StaxEventItemWriter">
+        <property name="resource" value="file:output/example10.xml" />
+        <property name="marshaller" ref="xmlMarshaller" />
+        <property name="rootTagName" value="citations" />
+        <property name="overwriteOutput" value="true" />
+    </bean>
+
+    <bean id="xmlMarshaller"
+          class="org.springframework.oxm.xstream.XStreamMarshaller">
+        <property name="aliases">
+            <map>
+                <entry key="citation"
+                       value="com.epam.techtalk.spring.batch.example05.Citation" />
+            </map>
+        </property>
+    </bean>
+
+
+
+
+
     <bean id="txtReader"
           init-method="init"
           class="com.epam.techtalk.spring.batch.example01.FileStringReader" />
@@ -59,35 +95,6 @@
 
     <bean id="identityProcessor"
           class="com.epam.techtalk.spring.batch.example10.IdentityProcessor" />
-
-
-    <bean id="csvWriter"
-          class="org.springframework.batch.item.file.FlatFileItemWriter">
-        <property name="lineAggregator" ref="csvLineAggregator" />
-        <property name="resource" value="file:output/example10.csv" />
-    </bean>
-
-    <bean id="csvLineAggregator"
-          class="com.epam.techtalk.spring.batch.example10.CsvLineAggregator" />
-
-
-    <bean id="xmlWriter"
-          class="org.springframework.batch.item.xml.StaxEventItemWriter">
-        <property name="resource" value="file:output/example10.xml" />
-        <property name="marshaller" ref="xmlMarshaller" />
-        <property name="overwriteOutput" value="true" />
-        <property name="rootTagName" value="citations" />
-    </bean>
-
-    <bean id="xmlMarshaller"
-          class="org.springframework.oxm.xstream.XStreamMarshaller">
-        <property name="aliases">
-            <map>
-                <entry key="citation"
-                       value="com.epam.techtalk.spring.batch.example05.Citation" />
-            </map>
-        </property>
-    </bean>
 
     <import resource="classpath:datasource-context.xml" />
 

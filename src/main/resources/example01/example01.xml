@@ -5,11 +5,6 @@
 
     <import resource="classpath:datasource-context.xml" />
 
-    <bean id="jobLauncher"
-          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
-        <property name="jobRepository" ref="jobRepository" />
-    </bean>
-
     <bean id="jobRepository"
           class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
         <property name="dataSource" ref="dataSource" />
@@ -17,12 +12,17 @@
         <property name="transactionManager" ref="transactionManager" />
     </bean>
 
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
     <batch:job id="example01Job">
         <batch:step id="s1">
             <batch:tasklet>
                 <batch:chunk reader="itemReader"
-                             writer="itemWriter"
                              processor="itemProcessor"
+                             writer="itemWriter"
                              commit-interval="10" />
             </batch:tasklet>
         </batch:step>

@@ -3,30 +3,19 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
 
-    <import resource="classpath:datasource-context.xml" />
-
-    <bean id="jobLauncher"
-          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
-        <property name="jobRepository" ref="jobRepository" />
-    </bean>
-
-    <bean id="jobRepository"
-          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
-        <property name="dataSource" ref="dataSource" />
-        <property name="databaseType" value="MySQL" />
-        <property name="transactionManager" ref="transactionManager" />
-    </bean>
-
     <batch:job id="example07Job">
         <batch:step id="step1">
             <batch:tasklet>
-                <batch:chunk reader="itemReader" processor="itemProcessor"
+                <batch:chunk reader="itemReader"
+                             processor="itemProcessor"
                              writer="jdbcItemWriter"
                              commit-interval="3"
                              skip-limit="2">
+
                     <batch:skippable-exception-classes>
                         <batch:include class="com.epam.techtalk.spring.batch.example06.VaderException" />
                     </batch:skippable-exception-classes>
+
                 </batch:chunk>
             </batch:tasklet>
 
@@ -36,8 +25,10 @@
 
         <batch:step id="step2">
             <batch:tasklet transaction-manager="hibernateTransactionManager">
-                <batch:chunk reader="jdbcCitationReader" processor="citationTextAndAuthorExtractor"
-                             writer="hibernateCitationWriter" commit-interval="3"/>
+                <batch:chunk reader="jdbcCitationReader"
+                             processor="citationTextAndAuthorExtractor"
+                             writer="hibernateCitationWriter"
+                             commit-interval="3"/>
             </batch:tasklet>
         </batch:step>
 
@@ -49,6 +40,16 @@
     <bean id="itemReader"
           init-method="init"
           class="com.epam.techtalk.spring.batch.example06.ExceptionOnVaderReader"></bean>
+
+    <bean id="vaderTasklet"
+          class="com.epam.techtalk.spring.batch.example06.VaderIsHereTasklet" />
+
+
+
+
+
+
+
 
     <bean id="jdbcItemWriter"
           class="com.epam.techtalk.spring.batch.example05.JdbcItemWriter">
@@ -76,6 +77,17 @@
         <property name="sessionFactory" ref="sessionFactory" />
     </bean>
 
-    <bean id="vaderTasklet"
-          class="com.epam.techtalk.spring.batch.example06.VaderIsHereTasklet" />
+    <import resource="classpath:datasource-context.xml" />
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="databaseType" value="MySQL" />
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
 </beans>

@@ -9,7 +9,7 @@ public class FileStringWriter implements ItemWriter<String> {
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-        System.out.println("Group no: " + ++counter);
+        System.out.println("Chunk no: " + ++counter);
         for (String item : items) {
             System.out.println(" -- " + item);
         }
