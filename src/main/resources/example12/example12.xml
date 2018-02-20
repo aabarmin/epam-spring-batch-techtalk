@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:batch="http://www.springframework.org/schema/batch"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+    <batch:job id="example12Job">
+        <batch:step id="readFromFile">
+            <batch:tasklet>
+                <batch:chunk reader="plainFileReader"
+                             processor="filteringIdentityStringProcessor"
+                             writer="jdbcStringItemWriter"
+                             commit-interval="10" />
+            </batch:tasklet>
+        </batch:step>
+
+        <batch:step id="splitIntoCitations">
+            <batch:tasklet>
+
+            </batch:tasklet>
+        </batch:step>
+    </batch:job>
+
+    <bean id="plainFileReader"
+          init-method="init"
+          class="com.epam.techtalk.spring.batch.example01.FileStringReader" />
+
+    <bean id="filteringIdentityStringProcessor"
+          scope="step"
+          class="com.epam.techtalk.spring.batch.example12.FilteringIdentityStringProcessor">
+        <property name="heroNames" value="#{jobParameters[HeroNames]}" />
+    </bean>
+
+    <bean id="jdbcStringItemWriter"
+          class="com.epam.techtalk.spring.batch.example05.JdbcItemWriter" />
+
+
+    <bean id="csvWriter"
+          class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="lineAggregator" ref="csvLineAggregator" />
+        <property name="resource" value="file:output/example10.csv" />
+    </bean>
+
+    <bean id="csvLineAggregator"
+          class="com.epam.techtalk.spring.batch.example10.CsvLineAggregator" />
+
+
+
+    <bean id="xmlWriter"
+          class="org.springframework.batch.item.xml.StaxEventItemWriter">
+        <property name="resource" value="file:output/example10.xml" />
+        <property name="marshaller" ref="xmlMarshaller" />
+        <property name="rootTagName" value="citations" />
+        <property name="overwriteOutput" value="true" />
+    </bean>
+
+    <bean id="xmlMarshaller"
+          class="org.springframework.oxm.xstream.XStreamMarshaller">
+        <property name="aliases">
+            <map>
+                <entry key="citation"
+                       value="com.epam.techtalk.spring.batch.example05.Citation" />
+            </map>
+        </property>
+    </bean>
+
+
+
+
+
+    <bean id="txtReader"
+          init-method="init"
+          class="com.epam.techtalk.spring.batch.example01.FileStringReader" />
+
+    <bean id="stringToObjectConverter"
+          class="com.epam.techtalk.spring.batch.example10.StringToObjectConverter" />
+
+    <bean id="hibernateWriter"
+          class="org.springframework.batch.item.database.HibernateItemWriter">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <bean id="hibernateReader"
+          class="org.springframework.batch.item.database.HibernatePagingItemReader">
+        <property name="sessionFactory" ref="sessionFactory" />
+        <property name="queryString" value="FROM Citation" />
+    </bean>
+
+
+
+
+    <import resource="classpath:datasource-context.xml" />
+
+    <bean id="jobLauncher"
+          class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+        <property name="jobRepository" ref="jobRepository" />
+    </bean>
+
+    <bean id="jobRepository"
+          class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="databaseType" value="MySQL" />
+        <property name="transactionManager" ref="hibernateTransactionManager" />
+    </bean>
+</beans>
