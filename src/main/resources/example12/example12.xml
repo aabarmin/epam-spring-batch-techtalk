@@ -4,22 +4,66 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
 
     <batch:job id="example12Job">
-        <batch:step id="readFromFile">
+        <batch:step id="readFromFile" next="splitIntoCitations">
             <batch:tasklet>
                 <batch:chunk reader="plainFileReader"
                              processor="filteringIdentityStringProcessor"
                              writer="jdbcStringItemWriter"
                              commit-interval="10" />
             </batch:tasklet>
+
+            <batch:listeners>
+                <batch:listener ref="stepExecutionListener" />
+            </batch:listeners>
         </batch:step>
 
-        <batch:step id="splitIntoCitations">
-            <batch:tasklet>
-
+        <batch:step id="splitIntoCitations" next="readAndConvertToXmlAndCsv">
+            <batch:tasklet transaction-manager="hibernateTransactionManager">
+                <batch:chunk reader="jdbcCitationReader"
+                             processor="citationTextExtractor"
+                             writer="hibernateCitationWriter"
+                             commit-interval="10" />
             </batch:tasklet>
+
+            <batch:listeners>
+                <batch:listener ref="stepExecutionListener" />
+            </batch:listeners>
         </batch:step>
+
+        <batch:split id="readAndConvertToXmlAndCsv">
+            <batch:flow>
+                <batch:step id="toXmlConversion">
+                    <batch:tasklet>
+                        <batch:chunk reader="hibernateCitationReader"
+                                     processor="identityCitationProcessor"
+                                     writer="xmlWriter"
+                                     commit-interval="10" />
+                    </batch:tasklet>
+
+                    <batch:listeners>
+                        <batch:listener ref="stepExecutionListener" />
+                    </batch:listeners>
+                </batch:step>
+            </batch:flow>
+
+            <batch:flow>
+                <batch:step id="toCsvConversion">
+                    <batch:tasklet>
+                        <batch:chunk reader="hibernateCitationReader"
+                                     processor="identityCitationProcessor"
+                                     writer="csvWriter"
+                                     commit-interval="10" />
+                    </batch:tasklet>
+
+                    <batch:listeners>
+                        <batch:listener ref="stepExecutionListener" />
+                    </batch:listeners>
+                </batch:step>
+            </batch:flow>
+        </batch:split>
     </batch:job>
 
+    <!-- Step 1 Beans -->
     <bean id="plainFileReader"
           init-method="init"
           class="com.epam.techtalk.spring.batch.example01.FileStringReader" />
@@ -31,63 +75,71 @@
     </bean>
 
     <bean id="jdbcStringItemWriter"
-          class="com.epam.techtalk.spring.batch.example05.JdbcItemWriter" />
-
-
-    <bean id="csvWriter"
-          class="org.springframework.batch.item.file.FlatFileItemWriter">
-        <property name="lineAggregator" ref="csvLineAggregator" />
-        <property name="resource" value="file:output/example10.csv" />
+          class="com.epam.techtalk.spring.batch.example05.JdbcItemWriter">
+        <property name="jdbcTemplate" ref="jdbcTemplate" />
     </bean>
 
-    <bean id="csvLineAggregator"
-          class="com.epam.techtalk.spring.batch.example10.CsvLineAggregator" />
 
-
-
-    <bean id="xmlWriter"
-          class="org.springframework.batch.item.xml.StaxEventItemWriter">
-        <property name="resource" value="file:output/example10.xml" />
-        <property name="marshaller" ref="xmlMarshaller" />
-        <property name="rootTagName" value="citations" />
-        <property name="overwriteOutput" value="true" />
-    </bean>
-
-    <bean id="xmlMarshaller"
-          class="org.springframework.oxm.xstream.XStreamMarshaller">
-        <property name="aliases">
-            <map>
-                <entry key="citation"
-                       value="com.epam.techtalk.spring.batch.example05.Citation" />
-            </map>
+    <!-- Step 2 Beans -->
+    <bean id="jdbcCitationReader"
+          class="org.springframework.batch.item.database.JdbcCursorItemReader">
+        <property name="dataSource" ref="dataSource" />
+        <property name="sql" value="SELECT * FROM quotes_table" />
+        <property name="rowMapper">
+            <bean class="com.epam.techtalk.spring.batch.example05.JdbcCitationMapper" />
         </property>
     </bean>
 
+    <bean id="citationTextExtractor"
+          class="com.epam.techtalk.spring.batch.example05.CitationTextAndAuthorExtractor" />
 
-
-
-
-    <bean id="txtReader"
-          init-method="init"
-          class="com.epam.techtalk.spring.batch.example01.FileStringReader" />
-
-    <bean id="stringToObjectConverter"
-          class="com.epam.techtalk.spring.batch.example10.StringToObjectConverter" />
-
-    <bean id="hibernateWriter"
+    <bean id="hibernateCitationWriter"
           class="org.springframework.batch.item.database.HibernateItemWriter">
         <property name="sessionFactory" ref="sessionFactory" />
     </bean>
 
-    <bean id="hibernateReader"
+
+    <!-- Step 3 Beans -->
+    <bean id="hibernateCitationReader"
           class="org.springframework.batch.item.database.HibernatePagingItemReader">
         <property name="sessionFactory" ref="sessionFactory" />
         <property name="queryString" value="FROM Citation" />
     </bean>
 
+    <bean id="identityCitationProcessor"
+          class="com.epam.techtalk.spring.batch.example12.IdentityCitationProcessor" />
+
+    <bean id="csvWriter"
+          class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="resource" value="file:output/example12.csv" />
+        <property name="lineAggregator">
+            <bean class="com.epam.techtalk.spring.batch.example10.CsvLineAggregator" />
+        </property>
+    </bean>
+
+    <bean id="xmlWriter"
+          class="org.springframework.batch.item.xml.StaxEventItemWriter">
+        <property name="resource" value="file:output/example12.xml" />
+        <property name="marshaller">
+            <bean class="org.springframework.oxm.xstream.XStreamMarshaller">
+                <property name="aliases">
+                    <map>
+                        <entry key="citation"
+                               value="com.epam.techtalk.spring.batch.example05.Citation" />
+                    </map>
+                </property>
+            </bean>
+        </property>
+        <property name="rootTagName" value="citations" />
+        <property name="overwriteOutput" value="true" />
+    </bean>
+
+    <!-- Listeners -->
+    <bean id="stepExecutionListener"
+          class="com.epam.techtalk.spring.batch.example12.CustomStepExecutionListener" />
 
 
-
+    <!-- Infrastructure beans -->
     <import resource="classpath:datasource-context.xml" />
 
     <bean id="jobLauncher"
@@ -99,6 +151,6 @@
           class="org.springframework.batch.core.repository.support.JobRepositoryFactoryBean">
         <property name="dataSource" ref="dataSource" />
         <property name="databaseType" value="MySQL" />
-        <property name="transactionManager" ref="hibernateTransactionManager" />
+        <property name="transactionManager" ref="transactionManager" />
     </bean>
 </beans>
